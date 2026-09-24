@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#1b2559">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>सुडोकू</title>
+<style>
+  :root {
+    --bg: #f5f6fb;
+    --panel: #ffffff;
+    --ink: #1b2559;
+    --ink-soft: #5b648f;
+    --line: #c9cee6;
+    --line-strong: #1b2559;
+    --given-bg: #e9ecf8;
+    --sel: #ffd95a;
+    --same: #ffefaa;
+    --rel: #eef0fa;
+    --mine: #2447d6;
+    --bad: #c62828;
+    --bad-bg: #fde3e3;
+    --btn: #1b2559;
+    --btn-text: #ffffff;
+    --ok: #16794c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1430;
+      --panel: #171d45;
+      --ink: #eef0ff;
+      --ink-soft: #a3abd6;
+      --line: #313a75;
+      --line-strong: #8f9be0;
+      --given-bg: #222a5c;
+      --sel: #b8891a;
+      --same: #5a4a17;
+      --rel: #1d2452;
+      --mine: #8fa8ff;
+      --bad: #ff8a8a;
+      --bad-bg: #4a1f2b;
+      --btn: #ffd95a;
+      --btn-text: #1b2559;
+      --ok: #6ee0a6;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Noto Sans Devanagari", "Mukta", "Hind", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+    min-height: 100vh;
+  }
+  .app { max-width: 460px; margin: 0 auto; padding: 14px 12px 24px; }
+  h1 { font-size: 34px; margin: 6px 0 2px; font-weight: 800; letter-spacing: 0; text-align: left; }
+  .sub { margin: 0 0 12px; color: var(--ink-soft); font-size: 15px; }
+
+  .levels { display: flex; gap: 8px; margin-bottom: 10px; }
+  .level {
+    flex: 1; padding: 9px 0; border-radius: 999px; border: 2px solid var(--line-strong);
+    background: transparent; color: var(--ink); font: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+  }
+  .level[aria-pressed="true"] { background: var(--btn); color: var(--btn-text); }
+
+  .status { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 700; }
+  .status span { color: var(--ink-soft); font-weight: 600; }
+  #timer { font-variant-numeric: tabular-nums; }
+
+  .board {
+    display: grid; grid-template-columns: repeat(9, 1fr);
+    border: 3px solid var(--line-strong); border-radius: 10px; overflow: hidden;
+    background: var(--panel); width: 100%; aspect-ratio: 1 / 1;
+  }
+  .cell {
+    position: relative; padding: 0; margin: 0; border: 0;
+    border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    background: var(--panel); color: var(--mine);
+    font: inherit; font-size: clamp(20px, 6.4vw, 30px); font-weight: 600;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; min-width: 0;
+  }
+  .cell.br { border-right: 3px solid var(--line-strong); }
+  .cell.bb { border-bottom: 3px solid var(--line-strong); }
+  .cell:nth-child(9n) { border-right: 0; }
+  .cell:nth-child(n+73) { border-bottom: 0; }
+  .cell.given { background: var(--given-bg); color: var(--ink); font-weight: 800; }
+  .cell.rel { background: var(--rel); }
+  .cell.given.rel { background: var(--given-bg); box-shadow: inset 0 0 0 100px color-mix(in srgb, var(--rel) 60%, transparent); }
+  .cell.same { background: var(--same); }
+  .cell.sel { background: var(--sel); color: #1b2559; }
+  .cell.bad { color: var(--bad); background: var(--bad-bg); }
+  .cell:focus-visible { outline: 3px solid var(--mine); outline-offset: -3px; z-index: 1; }
+
+  .pad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-top: 14px; }
+  .num {
+    aspect-ratio: 3 / 4; border-radius: 10px; border: 2px solid var(--line-strong);
+    background: var(--panel); color: var(--ink); font: inherit; font-size: 22px; font-weight: 800; cursor: pointer; padding: 0;
+  }
+  .num:active { background: var(--sel); }
+  .num:disabled { opacity: .25; cursor: default; }
+
+  .actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+  .btn {
+    padding: 12px 4px; border-radius: 12px; border: 0; background: var(--btn); color: var(--btn-text);
+    font: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn:focus-visible, .num:focus-visible, .level:focus-visible { outline: 3px solid var(--mine); outline-offset: 2px; }
+
+  .msg { min-height: 30px; margin: 14px 0 0; text-align: center; font-weight: 700; font-size: 17px; }
+  .msg.err { color: var(--bad); }
+  .msg.ok { color: var(--ok); }
+  .rules { margin-top: 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.6; }
+  .rules b { color: var(--ink); }
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>सुडोकू</h1>
+  <p class="sub">खाली खाने पर टैप करें, फिर नीचे से नंबर चुनें।</p>
+
+  <div class="levels" role="group" aria-label="स्तर">
+    <button class="level" data-level="easy" aria-pressed="true">आसान</button>
+    <button class="level" data-level="medium" aria-pressed="false">मध्यम</button>
+    <button class="level" data-level="hard" aria-pressed="false">कठिन</button>
+  </div>
+
+  <div class="status">
+    <span>समय: <b id="timer">00:00</b></span>
+    <span>संकेत इस्तेमाल: <b id="hints">0</b></span>
+  </div>
+
+  <div class="board" id="board" role="grid" aria-label="सुडोकू की तालिका"></div>
+
+  <div class="pad" id="pad"></div>
+
+  <div class="actions">
+    <button class="btn" id="btnCheck">जाँचें</button>
+    <button class="btn" id="btnErase">मिटाएँ</button>
+    <button class="btn" id="btnHint">संकेत</button>
+    <button class="btn" id="btnNew">नया खेल</button>
+  </div>
+
+  <p class="msg" id="msg" role="status" aria-live="polite"></p>
+
+  <p class="rules"><b>नियम:</b> हर पंक्ति (row), हर स्तंभ (column) और हर 3×3 डिब्बे में 1 से 9 तक के नंबर सिर्फ़ एक बार आने चाहिए। गहरे रंग के खाने पहले से भरे हैं, उन्हें बदला नहीं जा सकता।</p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- सुडोकू का तर्क (logic) ----------
+  const LEVELS = { easy: 40, medium: 48, hard: 54 }; // कितने खाने खाली करने हैं
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function canPlace(b, i, n) {
+    const r = Math.floor(i / 9), c = i % 9;
+    for (let k = 0; k < 9; k++) {
+      if (b[r * 9 + k] === n) return false;
+      if (b[k * 9 + c] === n) return false;
+    }
+    const br = r - (r % 3), bc = c - (c % 3);
+    for (let y = 0; y < 3; y++)
+      for (let x = 0; x < 3; x++)
+        if (b[(br + y) * 9 + bc + x] === n) return false;
+    return true;
+  }
+
+  function candidates(b, i) {
+    const out = [];
+    for (let n = 1; n <= 9; n++) if (canPlace(b, i, n)) out.push(n);
+    return out;
+  }
+
+  // पूरा भरा हुआ सही बोर्ड बनाता है (backtracking)
+  function fillBoard(b) {
+    const i = b.indexOf(0);
+    if (i < 0) return true;
+    for (const n of shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9])) {
+      if (canPlace(b, i, n)) {
+        b[i] = n;
+        if (fillBoard(b)) return true;
+        b[i] = 0;
+      }
+    }
+    return false;
+  }
+
+  // हल कितने हैं (limit तक गिनता है) ताकि पहेली का हल एक ही रहे
+  function countSolutions(b, limit) {
+    let best = -1, bestC = null;
+    for (let i = 0; i < 81; i++) {
+      if (b[i] === 0) {
+        const c = candidates(b, i);
+        if (c.length === 0) return 0;
+        if (bestC === null || c.length < bestC.length) {
+          best = i; bestC = c;
+          if (c.length === 1) break;
+        }
+      }
+    }
+    if (best < 0) return 1;
+    let total = 0;
+    for (const n of bestC) {
+      b[best] = n;
+      total += countSolutions(b, limit - total);
+      b[best] = 0;
+      if (total >= limit) break;
+    }
+    return total;
+  }
+
+  function makePuzzle(level) {
+    const solution = new Array(81).fill(0);
+    fillBoard(solution);
+    const puzzle = solution.slice();
+    const target = LEVELS[level];
+    let removed = 0;
+    for (const i of shuffle([...Array(81).keys()])) {
+      if (removed >= target) break;
+      const keep = puzzle[i];
+      puzzle[i] = 0;
+      if (countSolutions(puzzle.slice(), 2) !== 1) puzzle[i] = keep;
+      else removed++;
+    }
+    return { solution, puzzle };
+  }
+
+  function hasConflict(b, i) {
+    const v = b[i];
+    if (!v) return false;
+    const r = Math.floor(i / 9), c = i % 9;
+    for (let k = 0; k < 9; k++) {
+      if (k !== c && b[r * 9 + k] === v) return true;
+      if (k !== r && b[k * 9 + c] === v) return true;
+    }
+    const br = r - (r % 3), bc = c - (c % 3);
+    for (let y = 0; y < 3; y++)
+      for (let x = 0; x < 3; x++) {
+        const j = (br + y) * 9 + bc + x;
+        if (j !== i && b[j] === v) return true;
+      }
+    return false;
+  }
+
+  // ---------- स्थिति (state) ----------
+  let solution = [], puzzle = [], cur = [];
+  let selected = -1, level = "easy", hints = 0, seconds = 0, timerId = null, finished = false;
+
+  const boardEl = document.getElementById("board");
+  const padEl = document.getElementById("pad");
+  const msgEl = document.getElementById("msg");
+  const timerEl = document.getElementById("timer");
+  const hintsEl = document.getElementById("hints");
+  const cells = [];
+  const numBtns = [];
+
+  // ---------- स्क्रीन बनाना ----------
+  for (let i = 0; i < 81; i++) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.addEventListener("click", () => select(i));
+    boardEl.appendChild(b);
+    cells.push(b);
+  }
+  for (let n = 1; n <= 9; n++) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "num";
+    b.textContent = n;
+    b.setAttribute("aria-label", "नंबर " + n);
+    b.addEventListener("click", () => enter(n));
+    padEl.appendChild(b);
+    numBtns.push(b);
+  }
+
+  function message(text, kind) {
+    msgEl.textContent = text || "";
+    msgEl.className = "msg" + (kind ? " " + kind : "");
+  }
+
+  function fmt(s) {
+    const m = Math.floor(s / 60), r = s % 60;
+    return String(m).padStart(2, "0") + ":" + String(r).padStart(2, "0");
+  }
+
+  function render() {
+    const selVal = selected >= 0 ? cur[selected] : 0;
+    const sr = selected >= 0 ? Math.floor(selected / 9) : -1;
+    const sc = selected >= 0 ? selected % 9 : -1;
+    const counts = new Array(10).fill(0);
+
+    for (let i = 0; i < 81; i++) {
+      const el = cells[i], v = cur[i];
+      const r = Math.floor(i / 9), c = i % 9;
+      if (v) counts[v]++;
+      let cls = "cell";
+      if (c % 3 === 2 && c < 8) cls += " br";
+      if (r % 3 === 2 && r < 8) cls += " bb";
+      if (puzzle[i]) cls += " given";
+      if (selected >= 0) {
+        const sameBox = Math.floor(r / 3) === Math.floor(sr / 3) && Math.floor(c / 3) === Math.floor(sc / 3);
+        if (i === selected) cls += " sel";
+        else if (selVal && v === selVal) cls += " same";
+        else if (r === sr || c === sc || sameBox) cls += " rel";
+      }
+      if (v && !puzzle[i] && hasConflict(cur, i)) cls += " bad";
+      el.className = cls;
+      el.textContent = v || "";
+      el.setAttribute("aria-label", "पंक्ति " + (r + 1) + " स्तंभ " + (c + 1) + (v ? ", नंबर " + v : ", खाली"));
+    }
+    for (let n = 1; n <= 9; n++) numBtns[n - 1].disabled = counts[n] >= 9;
+    hintsEl.textContent = hints;
+  }
+
+  // ---------- क्रियाएँ ----------
+  function select(i) {
+    selected = i;
+    render();
+  }
+
+  function isComplete() {
+    for (let i = 0; i < 81; i++) if (!cur[i]) return false;
+    for (let i = 0; i < 81; i++) if (hasConflict(cur, i)) return false;
+    return true;
+  }
+
+  function win() {
+    finished = true;
+    clearInterval(timerId);
+    message("🎉 शाबाश! आपने " + fmt(seconds) + " में पहेली हल कर ली।", "ok");
+  }
+
+  function enter(n) {
+    if (finished) return;
+    if (selected < 0) { message("पहले कोई खाली खाना चुनें।", "err"); return; }
+    if (puzzle[selected]) { message("यह खाना पहले से भरा है, बदल नहीं सकते।", "err"); return; }
+    cur[selected] = n;
+    message("");
+    render();
+    if (isComplete()) win();
+  }
+
+  function erase() {
+    if (finished || selected < 0 || puzzle[selected]) return;
+    cur[selected] = 0;
+    message("");
+    render();
+  }
+
+  function check() {
+    if (finished) return;
+    let empty = 0, bad = 0;
+    for (let i = 0; i < 81; i++) {
+      if (!cur[i]) empty++;
+      else if (!puzzle[i] && cur[i] !== solution[i]) bad++;
+    }
+    if (bad > 0) message("❌ " + bad + " नंबर गलत हैं, फिर से देखें।", "err");
+    else if (empty > 0) message("अब तक सब सही है ✅ — " + empty + " खाने बाकी हैं।", "ok");
+    else win();
+  }
+
+  function hint() {
+    if (finished) return;
+    let i = selected;
+    if (i < 0 || puzzle[i] || cur[i] === solution[i]) {
+      const options = [];
+      for (let k = 0; k < 81; k++) if (cur[k] !== solution[k]) options.push(k);
+      if (!options.length) return;
+      i = options[Math.floor(Math.random() * options.length)];
+    }
+    cur[i] = solution[i];
+    selected = i;
+    hints++;
+    message("");
+    render();
+    if (isComplete()) win();
+  }
+
+  function newGame(lv) {
+    if (lv) level = lv;
+    message("पहेली बन रही है…");
+    document.querySelectorAll(".level").forEach(b =>
+      b.setAttribute("aria-pressed", b.dataset.level === level ? "true" : "false"));
+    // थोड़ा रुककर बनाते हैं ताकि "बन रही है" संदेश दिख जाए
+    setTimeout(() => {
+      const g = makePuzzle(level);
+      solution = g.solution;
+      puzzle = g.puzzle;
+      cur = g.puzzle.slice();
+      selected = -1; hints = 0; seconds = 0; finished = false;
+      timerEl.textContent = fmt(0);
+      clearInterval(timerId);
+      timerId = setInterval(() => { seconds++; timerEl.textContent = fmt(seconds); }, 1000);
+      message("");
+      render();
+    }, 30);
+  }
+
+  // ---------- बटन और कीबोर्ड ----------
+  document.getElementById("btnCheck").addEventListener("click", check);
+  document.getElementById("btnErase").addEventListener("click", erase);
+  document.getElementById("btnHint").addEventListener("click", hint);
+  document.getElementById("btnNew").addEventListener("click", () => newGame());
+  document.querySelectorAll(".level").forEach(b =>
+    b.addEventListener("click", () => newGame(b.dataset.level)));
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key >= "1" && e.key <= "9") enter(Number(e.key));
+    else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") erase();
+    else if (selected >= 0 && e.key.startsWith("Arrow")) {
+      e.preventDefault();
+      let r = Math.floor(selected / 9), c = selected % 9;
+      if (e.key === "ArrowUp") r = Math.max(0, r - 1);
+      if (e.key === "ArrowDown") r = Math.min(8, r + 1);
+      if (e.key === "ArrowLeft") c = Math.max(0, c - 1);
+      if (e.key === "ArrowRight") c = Math.min(8, c + 1);
+      select(r * 9 + c);
+      cells[r * 9 + c].focus();
+    }
+  });
+
+  newGame("easy");
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js"); });
+}
+</script>
+</body>
+</html>
