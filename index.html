@@ -231,6 +231,66 @@
   @keyframes badgeIn { to { opacity: 1; transform: scale(1) rotate(0deg); } }
   @keyframes brandIn { to { opacity: 1; transform: translateY(0); } }
   @keyframes splashOut { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+
+  /* ---------- Multi-screen navigation ---------- */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .topbar2 {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+  }
+  .iconBtn {
+    width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--line-strong);
+    background: var(--panel); color: var(--ink); font-size: 18px; cursor: pointer; flex: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .iconBtn:active { background: var(--sel); }
+
+  .homeTitle { text-align: center; margin: 18px 0 6px; }
+  .homeTitle .k1 { font-weight: 800; font-size: 22px; letter-spacing: 2px; }
+  .homeTitle .k2 { font-weight: 700; font-size: 13px; letter-spacing: 4px; color: var(--ink-soft); }
+
+  .xpBadge {
+    width: 150px; height: 150px; margin: 22px auto; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffd95a, var(--accent) 70%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; box-shadow: 0 12px 26px rgba(0,0,0,.25);
+    clip-path: polygon(50% 0%,61% 12%,75% 3%,79% 18%,94% 15%,92% 31%,100% 40%,90% 50%,100% 60%,92% 69%,94% 85%,79% 82%,75% 97%,61% 88%,50% 100%,39% 88%,25% 97%,21% 82%,6% 85%,8% 69%,0% 60%,10% 50%,0% 40%,8% 31%,6% 15%,21% 18%,25% 3%,39% 12%);
+  }
+  .xpBadge .n { font-size: 30px; font-weight: 900; }
+  .xpBadge .l { font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+
+  .homeActions { margin-top: 34px; display: flex; flex-direction: column; gap: 12px; }
+  .pillBtn {
+    width: 100%; padding: 16px 0; border-radius: 999px; border: 0; font: inherit;
+    font-weight: 800; font-size: 17px; cursor: pointer;
+  }
+  .pillBtn.primary { background: var(--btn); color: var(--btn-text); }
+  .pillBtn.secondary { background: var(--panel); color: var(--btn); box-shadow: inset 0 0 0 2px var(--line-strong); }
+  .pillBtn:disabled { opacity: .4; }
+  .pillBtn small { display: block; font-weight: 600; font-size: 12px; opacity: .85; margin-top: 2px; }
+
+  /* Level-select overlay */
+  #screenLevels.active { display: flex; }
+  #screenLevels {
+    position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,.5);
+    align-items: center; justify-content: center; padding: 16px;
+  }
+  .levelSheet {
+    width: 100%; max-width: 420px; background: var(--panel); border-radius: 18px;
+    padding: 10px; box-shadow: 0 20px 50px rgba(0,0,0,.35); max-height: 86vh; overflow-y: auto;
+  }
+  .levelRow {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 16px; margin: 6px 0; border-radius: 14px; border: 0;
+    background: var(--rel); color: var(--ink); font: inherit; font-weight: 700; font-size: 16px; cursor: pointer;
+  }
+  .levelRow:active { background: var(--same); }
+  .levelRow .sub { font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+  .levelCancel {
+    width: 100%; margin-top: 6px; padding: 15px 0; border-radius: 14px; border: 0;
+    background: var(--btn); color: var(--btn-text); font: inherit; font-weight: 800; font-size: 16px; cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -240,50 +300,87 @@
   <div class="tag">Sudoku</div>
 </div>
 <main class="app">
-  <div class="topbar">
-    <div>
-      <h1>Sudoku</h1>
-      <p class="sub">Tap an empty cell, then choose a number below.</p>
+
+  <!-- ========== SCREEN 1: HOME ========== -->
+  <section class="screen active" id="screenHome">
+    <div class="topbar2">
+      <button class="iconBtn" id="btnGearHome" aria-label="Settings" title="Settings">⚙️</button>
+      <button class="iconBtn" id="btnThemeHome" aria-label="Toggle theme" title="Toggle theme">🌙</button>
     </div>
-    <button class="themeBtn" id="btnTheme" aria-label="Toggle theme" title="Toggle theme">🌙</button>
-  </div>
 
-  <div class="rankBar" id="rankBar">
-    <span class="rankLabel">Rank <b id="rankNum">1</b></span>
-    <div class="rankTrack"><div class="rankFill" id="rankFill"></div></div>
-    <span class="rankXp" id="rankXpText">0/100 XP</span>
-  </div>
+    <div class="homeTitle">
+      <div class="k1">SUDOKU</div>
+      <div class="k2">CLUB</div>
+    </div>
 
-  <button class="daily" id="btnDaily">🗓️ Play today's puzzle</button>
+    <div class="xpBadge">
+      <div class="n" id="homeXp">0</div>
+      <div class="l">EXPERIENCE</div>
+    </div>
 
-  <div class="levels" role="group" aria-label="Level">
-    <button class="level" data-level="easy" aria-pressed="true">Easy</button>
-    <button class="level" data-level="medium" aria-pressed="false">Medium</button>
-    <button class="level" data-level="hard" aria-pressed="false">Hard</button>
-  </div>
+    <div class="homeActions">
+      <button class="pillBtn secondary" id="btnDaily">🗓️ Play today's puzzle</button>
+      <button class="pillBtn primary" id="btnContinue" disabled>
+        Continue game<small id="continueInfo">No game in progress</small>
+      </button>
+      <button class="pillBtn secondary" id="btnNewGame">New Game</button>
+    </div>
+  </section>
 
-  <div class="status">
-    <span>Time: <b id="timer">00:00</b></span>
-    <span>Mistakes: <b class="mist" id="mistakes">0</b></span>
-    <span>Hints: <b id="hints">0</b></span>
-  </div>
+  <!-- ========== SCREEN 2: LEVEL SELECT (overlay) ========== -->
+  <section class="screen" id="screenLevels">
+    <div class="levelSheet" role="group" aria-label="Choose level">
+      <button class="levelRow" data-level="beginner">Beginner <span class="sub">Lv1</span></button>
+      <button class="levelRow" data-level="easy">Easy <span class="sub">Lv1</span></button>
+      <button class="levelRow" data-level="medium">Medium <span class="sub">Lv1</span></button>
+      <button class="levelRow" data-level="hard">Hard <span class="sub">Lv1</span></button>
+      <button class="levelRow" data-level="expert">Expert <span class="sub">Lv1</span></button>
+      <button class="levelRow" data-level="extreme">Extreme <span class="sub">Lv1</span></button>
+      <button class="levelCancel" id="btnCancelLevels">Cancel</button>
+    </div>
+  </section>
 
-  <div class="board" id="board" role="grid" aria-label="Sudoku board"></div>
+  <!-- ========== SCREEN 3: GAME ========== -->
+  <section class="screen" id="screenGame">
+    <div class="topbar">
+      <div>
+        <h1 id="gameTitle">Sudoku</h1>
+        <p class="sub">Tap an empty cell, then choose a number below.</p>
+      </div>
+      <button class="themeBtn" id="btnTheme" aria-label="Toggle theme" title="Toggle theme">🌙</button>
+    </div>
 
-  <div class="pad" id="pad"></div>
+    <div class="topbar" style="margin-top:-6px;">
+      <button class="btn ghost" id="btnBackHome" style="width:auto;padding:8px 16px;">← Menu</button>
+      <div class="rankBar" id="rankBar" style="flex:1;margin:0 0 0 10px;">
+        <span class="rankLabel">Rank <b id="rankNum">1</b></span>
+        <div class="rankTrack"><div class="rankFill" id="rankFill"></div></div>
+        <span class="rankXp" id="rankXpText">0/100 XP</span>
+      </div>
+    </div>
 
-  <div class="actions">
-    <button class="btn" id="btnCheck">✅ Check</button>
-    <button class="btn ghost" id="btnUndo">↩️ Undo</button>
-    <button class="btn ghost" id="btnErase">🧽 Erase</button>
-    <button class="btn ghost" id="btnNotes">✏️ Notes</button>
-    <button class="btn" id="btnHint">💡 Hint</button>
-    <button class="btn" id="btnNew">🔄 New game</button>
-  </div>
+    <div class="status">
+      <span>Time: <b id="timer">00:00</b></span>
+      <span>Mistakes: <b class="mist" id="mistakes">0</b></span>
+      <span>Hints: <b id="hints">0</b></span>
+    </div>
 
-  <p class="msg" id="msg" role="status" aria-live="polite"></p>
+    <div class="board" id="board" role="grid" aria-label="Sudoku board"></div>
 
-  <p class="rules"><b>Rules:</b> Every row, every column, and every 3×3 box must contain the numbers 1 to 9, each appearing only once. Darker cells are given and can't be changed. Turn on "Notes" to pencil in possible numbers for a cell.</p>
+    <div class="pad" id="pad"></div>
+
+    <div class="actions">
+      <button class="btn" id="btnCheck">✅ Check</button>
+      <button class="btn ghost" id="btnUndo">↩️ Undo</button>
+      <button class="btn ghost" id="btnErase">🧽 Erase</button>
+      <button class="btn ghost" id="btnNotes">✏️ Notes</button>
+      <button class="btn" id="btnHint">💡 Hint</button>
+    </div>
+
+    <p class="msg" id="msg" role="status" aria-live="polite"></p>
+
+    <p class="rules"><b>Rules:</b> Every row, every column, and every 3×3 box must contain the numbers 1 to 9, each appearing only once. Darker cells are given and can't be changed. Turn on "Notes" to pencil in possible numbers for a cell.</p>
+  </section>
 
   <div id="levelUpOverlay">
     <div class="card">
@@ -317,6 +414,8 @@
     rankNumEl.textContent = rank;
     rankFillEl.style.width = Math.min(100, Math.round((xp / need) * 100)) + "%";
     rankXpTextEl.textContent = xp + "/" + need + " XP";
+    const homeXpEl = document.getElementById("homeXp");
+    if (homeXpEl) homeXpEl.textContent = xp;
   }
 
   function showLevelUp(newRank) {
@@ -339,22 +438,27 @@
     if (leveled) showLevelUp(newRank);
   }
   const btnTheme = document.getElementById("btnTheme");
+  const btnThemeHome = document.getElementById("btnThemeHome");
   function applyTheme(t) {
     if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
     else document.documentElement.removeAttribute("data-theme");
     const isDark = t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    btnTheme.textContent = isDark ? "☀️" : "🌙";
+    const icon = isDark ? "☀️" : "🌙";
+    btnTheme.textContent = icon;
+    if (btnThemeHome) btnThemeHome.textContent = icon;
   }
   let savedTheme = "auto";
   try { savedTheme = localStorage.getItem(THEME_KEY) || "auto"; } catch (e) {}
   applyTheme(savedTheme);
-  btnTheme.addEventListener("click", () => {
+  function toggleTheme() {
     const isDarkNow = document.documentElement.getAttribute("data-theme") === "dark" ||
       (!document.documentElement.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
     const next = isDarkNow ? "light" : "dark";
     applyTheme(next);
     try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
-  });
+  }
+  btnTheme.addEventListener("click", toggleTheme);
+  if (btnThemeHome) btnThemeHome.addEventListener("click", toggleTheme);
 
   // ---------- Seeded random, for the daily puzzle ----------
   function mulberry32(seed) {
@@ -373,7 +477,7 @@
   let rng = Math.random;
 
   // ---------- Sudoku logic ----------
-  const LEVELS = { easy: 40, medium: 48, hard: 54 }; // how many cells to empty out
+  const LEVELS = { beginner: 32, easy: 40, medium: 48, hard: 54, expert: 58, extreme: 60 }; // how many cells to empty out
 
   function shuffle(a) {
     for (let i = a.length - 1; i > 0; i--) {
@@ -574,6 +678,7 @@
     mistakesEl.textContent = mistakes;
     btnNotes.className = "btn ghost" + (notesMode ? " on" : "");
     btnUndo.disabled = history.length === 0;
+    saveGameState();
   }
 
   // ---------- Actions ----------
@@ -596,7 +701,9 @@
   function win() {
     finished = true;
     clearInterval(timerId);
-    const xpAmount = isDaily ? 50 : (level === "hard" ? 30 : level === "medium" ? 20 : 10);
+    clearGameState();
+    const XP_BY_LEVEL = { beginner: 5, easy: 10, medium: 20, hard: 30, expert: 40, extreme: 50 };
+    const xpAmount = isDaily ? 50 : (XP_BY_LEVEL[level] || 10);
     awardXP(xpAmount);
     message("🎉 Well done! You solved the puzzle in " + fmt(seconds) + ". (+" + xpAmount + " XP)", "ok");
   }
@@ -699,11 +806,14 @@
     level = lv; isDaily = !!daily;
     timerEl.textContent = fmt(0);
     clearInterval(timerId);
-    timerId = setInterval(() => { seconds++; timerEl.textContent = fmt(seconds); }, 1000);
-    document.querySelectorAll(".level").forEach(b =>
-      b.setAttribute("aria-pressed", (!daily && b.dataset.level === level) ? "true" : "false"));
+    timerId = setInterval(() => {
+      seconds++; timerEl.textContent = fmt(seconds);
+      if (seconds % 5 === 0) saveGameState();
+    }, 1000);
+    gameTitleEl.textContent = daily ? "Today's Puzzle" : level.charAt(0).toUpperCase() + level.slice(1);
     message(daily ? "🗓️ Today's puzzle — a new one every day!" : "");
     render();
+    showScreen("game");
   }
 
   function newGame(lv) {
@@ -724,18 +834,95 @@
     }, 30);
   }
 
+  // ---------- In-progress game save / resume ----------
+  const SAVE_KEY = "sudoku-save";
+  function saveGameState() {
+    if (!solution.length || finished) return;
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        solution, puzzle, cur,
+        notes: notes.map(n => n ? [...n] : null),
+        level, isDaily, hints, mistakes, seconds
+      }));
+    } catch (e) {}
+  }
+  function loadSavedGame() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function clearGameState() {
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  }
+  function resumeGame() {
+    const s = loadSavedGame();
+    if (!s) return;
+    solution = s.solution; puzzle = s.puzzle; cur = s.cur;
+    notes = s.notes.map(n => n ? new Set(n) : null);
+    level = s.level; isDaily = s.isDaily; hints = s.hints; mistakes = s.mistakes; seconds = s.seconds;
+    selected = -1; finished = false; notesMode = false; history = [];
+    timerEl.textContent = fmt(seconds);
+    clearInterval(timerId);
+    timerId = setInterval(() => {
+      seconds++; timerEl.textContent = fmt(seconds);
+      if (seconds % 5 === 0) saveGameState();
+    }, 1000);
+    gameTitleEl.textContent = isDaily ? "Today's Puzzle" : level.charAt(0).toUpperCase() + level.slice(1);
+    message("");
+    render();
+    showScreen("game");
+  }
+
+  // ---------- Screen navigation ----------
+  const screenHome = document.getElementById("screenHome");
+  const screenLevels = document.getElementById("screenLevels");
+  const screenGame = document.getElementById("screenGame");
+  const btnContinue = document.getElementById("btnContinue");
+  const continueInfo = document.getElementById("continueInfo");
+  const gameTitleEl = document.getElementById("gameTitle");
+
+  function refreshHome() {
+    const s = loadSavedGame();
+    if (s) {
+      btnContinue.disabled = false;
+      const lv = s.isDaily ? "Today's Puzzle" : s.level.charAt(0).toUpperCase() + s.level.slice(1);
+      continueInfo.textContent = fmt(s.seconds) + " · " + lv;
+    } else {
+      btnContinue.disabled = true;
+      continueInfo.textContent = "No game in progress";
+    }
+  }
+
+  function showScreen(name) {
+    [screenHome, screenLevels, screenGame].forEach(s => s.classList.remove("active"));
+    if (name === "home") { clearInterval(timerId); refreshHome(); screenHome.classList.add("active"); }
+    else if (name === "levels") { screenLevels.classList.add("active"); }
+    else if (name === "game") { screenGame.classList.add("active"); }
+  }
+
+  document.getElementById("btnNewGame").addEventListener("click", () => showScreen("levels"));
+  document.getElementById("btnCancelLevels").addEventListener("click", () => showScreen("home"));
+  document.getElementById("btnBackHome").addEventListener("click", () => { saveGameState(); showScreen("home"); });
+  btnContinue.addEventListener("click", resumeGame);
+  document.querySelectorAll(".levelRow").forEach(b =>
+    b.addEventListener("click", () => newGame(b.dataset.level)));
+  document.getElementById("btnGearHome").addEventListener("click", () => {
+    if (confirm("Reset your rank and experience? This can't be undone.")) {
+      xp = 0; rank = 1; saveXP(); renderRank();
+    }
+  });
+
   // ---------- Buttons and keyboard ----------
   document.getElementById("btnCheck").addEventListener("click", check);
   document.getElementById("btnErase").addEventListener("click", erase);
   document.getElementById("btnHint").addEventListener("click", hint);
-  document.getElementById("btnNew").addEventListener("click", () => newGame());
   document.getElementById("btnUndo").addEventListener("click", undo);
   document.getElementById("btnNotes").addEventListener("click", () => { notesMode = !notesMode; render(); });
   btnDaily.addEventListener("click", dailyGame);
-  document.querySelectorAll(".level").forEach(b =>
-    b.addEventListener("click", () => newGame(b.dataset.level)));
 
   document.addEventListener("keydown", (e) => {
+    if (!screenGame.classList.contains("active")) return;
     if (e.key >= "1" && e.key <= "9") enter(Number(e.key));
     else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") erase();
     else if (e.key.toLowerCase() === "z" && (e.ctrlKey || e.metaKey)) undo();
@@ -752,7 +939,7 @@
     }
   });
 
-  newGame("easy");
+  showScreen("home");
 })();
 </script>
 <script>
