@@ -26,9 +26,31 @@
     --btn: #1b2559;
     --btn-text: #ffffff;
     --ok: #16794c;
+    --note: #7c86b8;
+    --accent: #ff8a3d;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1430;
+    --panel: #171d45;
+    --ink: #eef0ff;
+    --ink-soft: #a3abd6;
+    --line: #313a75;
+    --line-strong: #8f9be0;
+    --given-bg: #222a5c;
+    --sel: #b8891a;
+    --same: #5a4a17;
+    --rel: #1d2452;
+    --mine: #8fa8ff;
+    --bad: #ff8a8a;
+    --bad-bg: #4a1f2b;
+    --btn: #ffd95a;
+    --btn-text: #1b2559;
+    --ok: #6ee0a6;
+    --note: #8791c9;
+    --accent: #ffb26b;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --bg: #0f1430;
       --panel: #171d45;
       --ink: #eef0ff;
@@ -45,10 +67,12 @@
       --btn: #ffd95a;
       --btn-text: #1b2559;
       --ok: #6ee0a6;
+      --note: #8791c9;
+      --accent: #ffb26b;
     }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; }
+  html, body { margin: 0; background: var(--bg); }
   body {
     background: var(--bg);
     color: var(--ink);
@@ -57,8 +81,13 @@
     min-height: 100vh;
   }
   .app { max-width: 460px; margin: 0 auto; padding: 14px 12px 24px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; }
   h1 { font-size: 34px; margin: 6px 0 2px; font-weight: 800; letter-spacing: 0; text-align: left; }
   .sub { margin: 0 0 12px; color: var(--ink-soft); font-size: 15px; }
+  .themeBtn {
+    width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--line-strong);
+    background: var(--panel); color: var(--ink); font-size: 20px; cursor: pointer; flex: none;
+  }
 
   .levels { display: flex; gap: 8px; margin-bottom: 10px; }
   .level {
@@ -67,8 +96,47 @@
   }
   .level[aria-pressed="true"] { background: var(--btn); color: var(--btn-text); }
 
-  .status { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 700; }
+  .rankBar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; font-weight: 700;
+  }
+  .rankBar .rankLabel { color: var(--ink); white-space: nowrap; }
+  .rankBar .rankLabel b { color: var(--accent); font-size: 15px; }
+  .rankTrack {
+    flex: 1; height: 10px; border-radius: 999px; background: var(--rel);
+    overflow: hidden; box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .rankFill {
+    height: 100%; width: 0%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), #ffd95a);
+    transition: width .5s ease;
+  }
+  .rankXp { color: var(--ink-soft); white-space: nowrap; font-weight: 600; }
+
+  #levelUpOverlay {
+    position: fixed; inset: 0; z-index: 998;
+    background: rgba(0,0,0,.55);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+  }
+  #levelUpOverlay.show { opacity: 1; pointer-events: auto; }
+  #levelUpOverlay .card {
+    background: var(--panel); color: var(--ink); border-radius: 20px; padding: 28px 34px;
+    text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.4);
+    transform: scale(.5); transition: transform .35s cubic-bezier(.2,1.4,.4,1);
+  }
+  #levelUpOverlay.show .card { transform: scale(1); }
+  #levelUpOverlay .big { font-size: 40px; font-weight: 900; color: var(--accent); margin: 6px 0; }
+  #levelUpOverlay .sub { color: var(--ink-soft); font-weight: 600; }
+
+  .daily {
+    width: 100%; margin-bottom: 10px; padding: 10px 0; border-radius: 12px; border: 2px dashed var(--accent);
+    background: transparent; color: var(--accent); font: inherit; font-weight: 800; font-size: 15px; cursor: pointer;
+  }
+  .daily:active { transform: scale(.98); }
+
+  .status { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 700; gap: 8px; flex-wrap: wrap; }
   .status span { color: var(--ink-soft); font-weight: 600; }
+  .status b.mist { color: var(--bad); }
   #timer { font-variant-numeric: tabular-nums; }
 
   .board {
@@ -94,6 +162,17 @@
   .cell.sel { background: var(--sel); color: #1b2559; }
   .cell.bad { color: var(--bad); background: var(--bad-bg); }
   .cell:focus-visible { outline: 3px solid var(--mine); outline-offset: -3px; z-index: 1; }
+  .cell.pop .val { animation: popIn .22s ease; }
+  @keyframes popIn { 0% { transform: scale(.3); opacity: .2; } 60% { transform: scale(1.25); opacity: 1; } 100% { transform: scale(1); } }
+
+  .notesGrid {
+    display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+    width: 100%; height: 100%; padding: 2px;
+  }
+  .notesGrid span {
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(8px, 2vw, 11px); font-weight: 700; color: var(--note); line-height: 1;
+  }
 
   .pad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-top: 14px; }
   .num {
@@ -103,13 +182,16 @@
   .num:active { background: var(--sel); }
   .num:disabled { opacity: .25; cursor: default; }
 
-  .actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+  .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
   .btn {
     padding: 12px 4px; border-radius: 12px; border: 0; background: var(--btn); color: var(--btn-text);
-    font: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+    font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
   }
+  .btn.ghost { background: transparent; border: 2px solid var(--line-strong); color: var(--ink); }
+  .btn.on { background: var(--accent); color: #1b2559; }
   .btn:active { transform: scale(.97); }
-  .btn:focus-visible, .num:focus-visible, .level:focus-visible { outline: 3px solid var(--mine); outline-offset: 2px; }
+  .btn:disabled { opacity: .35; }
+  .btn:focus-visible, .num:focus-visible, .level:focus-visible, .themeBtn:focus-visible, .daily:focus-visible { outline: 3px solid var(--mine); outline-offset: 2px; }
 
   .msg { min-height: 30px; margin: 14px 0 0; text-align: center; font-weight: 700; font-size: 17px; }
   .msg.err { color: var(--bad); }
@@ -158,8 +240,21 @@
   <div class="tag">सुडोकू</div>
 </div>
 <main class="app">
-  <h1>सुडोकू</h1>
-  <p class="sub">खाली खाने पर टैप करें, फिर नीचे से नंबर चुनें।</p>
+  <div class="topbar">
+    <div>
+      <h1>सुडोकू</h1>
+      <p class="sub">खाली खाने पर टैप करें, फिर नीचे से नंबर चुनें।</p>
+    </div>
+    <button class="themeBtn" id="btnTheme" aria-label="थीम बदलें" title="थीम बदलें">🌙</button>
+  </div>
+
+  <div class="rankBar" id="rankBar">
+    <span class="rankLabel">रैंक <b id="rankNum">1</b></span>
+    <div class="rankTrack"><div class="rankFill" id="rankFill"></div></div>
+    <span class="rankXp" id="rankXpText">0/100 XP</span>
+  </div>
+
+  <button class="daily" id="btnDaily">🗓️ आज की पहेली खेलें</button>
 
   <div class="levels" role="group" aria-label="स्तर">
     <button class="level" data-level="easy" aria-pressed="true">आसान</button>
@@ -169,7 +264,8 @@
 
   <div class="status">
     <span>समय: <b id="timer">00:00</b></span>
-    <span>संकेत इस्तेमाल: <b id="hints">0</b></span>
+    <span>गलतियाँ: <b class="mist" id="mistakes">0</b></span>
+    <span>संकेत: <b id="hints">0</b></span>
   </div>
 
   <div class="board" id="board" role="grid" aria-label="सुडोकू की तालिका"></div>
@@ -177,28 +273,111 @@
   <div class="pad" id="pad"></div>
 
   <div class="actions">
-    <button class="btn" id="btnCheck">जाँचें</button>
-    <button class="btn" id="btnErase">मिटाएँ</button>
-    <button class="btn" id="btnHint">संकेत</button>
-    <button class="btn" id="btnNew">नया खेल</button>
+    <button class="btn" id="btnCheck">✅ जाँचें</button>
+    <button class="btn ghost" id="btnUndo">↩️ वापस</button>
+    <button class="btn ghost" id="btnErase">🧽 मिटाएँ</button>
+    <button class="btn ghost" id="btnNotes">✏️ नोट्स</button>
+    <button class="btn" id="btnHint">💡 संकेत</button>
+    <button class="btn" id="btnNew">🔄 नया खेल</button>
   </div>
 
   <p class="msg" id="msg" role="status" aria-live="polite"></p>
 
-  <p class="rules"><b>नियम:</b> हर पंक्ति (row), हर स्तंभ (column) और हर 3×3 डिब्बे में 1 से 9 तक के नंबर सिर्फ़ एक बार आने चाहिए। गहरे रंग के खाने पहले से भरे हैं, उन्हें बदला नहीं जा सकता।</p>
-  <p class="rules" style="text-align:center; margin-top:18px; font-weight:700; color: var(--ink);">आप सभी का स्वागत है 🙏 — यह सुडोकू क्लासिक तरीके से बनाया गया है।</p>
+  <p class="rules"><b>नियम:</b> हर पंक्ति (row), हर स्तंभ (column) और हर 3×3 डिब्बे में 1 से 9 तक के नंबर सिर्फ़ एक बार आने चाहिए। गहरे रंग के खाने पहले से भरे हैं, उन्हें बदला नहीं जा सकता। "नोट्स" चालू करके किसी खाने में हल्के में संभावित नंबर लिख सकते हैं।</p>
+
+  <div id="levelUpOverlay">
+    <div class="card">
+      <div class="sub">🎉 बधाई हो!</div>
+      <div class="big" id="levelUpText">रैंक 2</div>
+      <div class="sub">आपने अगला रैंक पा लिया</div>
+    </div>
+  </div>
 </main>
 
 <script>
 (function () {
   "use strict";
 
+  // ---------- थीम (डार्क मोड) ----------
+  const THEME_KEY = "sudoku-theme";
+  const XP_KEY = "sudoku-xp-rank";
+  let xp = 0, rank = 1;
+  function xpNeeded(r) { return r * 100; }
+  function loadXP() {
+    try {
+      const raw = localStorage.getItem(XP_KEY);
+      if (raw) { const d = JSON.parse(raw); xp = d.xp || 0; rank = d.rank || 1; }
+    } catch (e) {}
+  }
+  function saveXP() {
+    try { localStorage.setItem(XP_KEY, JSON.stringify({ xp, rank })); } catch (e) {}
+  }
+  function renderRank() {
+    const need = xpNeeded(rank);
+    rankNumEl.textContent = rank;
+    rankFillEl.style.width = Math.min(100, Math.round((xp / need) * 100)) + "%";
+    rankXpTextEl.textContent = xp + "/" + need + " XP";
+  }
+
+  function showLevelUp(newRank) {
+    levelUpText.textContent = "रैंक " + newRank;
+    levelUpOverlay.classList.add("show");
+    setTimeout(() => levelUpOverlay.classList.remove("show"), 1800);
+  }
+
+  function awardXP(amount) {
+    xp += amount;
+    let leveled = false, newRank = rank;
+    while (xp >= xpNeeded(rank)) {
+      xp -= xpNeeded(rank);
+      rank++;
+      leveled = true;
+      newRank = rank;
+    }
+    saveXP();
+    renderRank();
+    if (leveled) showLevelUp(newRank);
+  }
+  const btnTheme = document.getElementById("btnTheme");
+  function applyTheme(t) {
+    if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
+    else document.documentElement.removeAttribute("data-theme");
+    const isDark = t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    btnTheme.textContent = isDark ? "☀️" : "🌙";
+  }
+  let savedTheme = "auto";
+  try { savedTheme = localStorage.getItem(THEME_KEY) || "auto"; } catch (e) {}
+  applyTheme(savedTheme);
+  btnTheme.addEventListener("click", () => {
+    const isDarkNow = document.documentElement.getAttribute("data-theme") === "dark" ||
+      (!document.documentElement.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    const next = isDarkNow ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  });
+
+  // ---------- बीज वाला (seeded) रैंडम, रोज़ की पहेली के लिए ----------
+  function mulberry32(seed) {
+    return function () {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hashStr(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  let rng = Math.random;
+
   // ---------- सुडोकू का तर्क (logic) ----------
   const LEVELS = { easy: 40, medium: 48, hard: 54 }; // कितने खाने खाली करने हैं
 
   function shuffle(a) {
     for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(rng() * (i + 1));
       [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
@@ -295,14 +474,28 @@
   }
 
   // ---------- स्थिति (state) ----------
-  let solution = [], puzzle = [], cur = [];
-  let selected = -1, level = "easy", hints = 0, seconds = 0, timerId = null, finished = false;
+  let solution = [], puzzle = [], cur = [], notes = [];
+  let selected = -1, level = "easy", hints = 0, mistakes = 0, seconds = 0, timerId = null, finished = false;
+  let notesMode = false;
+  let history = [];
+  let isDaily = false;
 
   const boardEl = document.getElementById("board");
   const padEl = document.getElementById("pad");
   const msgEl = document.getElementById("msg");
   const timerEl = document.getElementById("timer");
   const hintsEl = document.getElementById("hints");
+  const mistakesEl = document.getElementById("mistakes");
+  const btnNotes = document.getElementById("btnNotes");
+  const btnUndo = document.getElementById("btnUndo");
+  const btnDaily = document.getElementById("btnDaily");
+  const rankNumEl = document.getElementById("rankNum");
+  const rankFillEl = document.getElementById("rankFill");
+  const rankXpTextEl = document.getElementById("rankXpText");
+  const levelUpOverlay = document.getElementById("levelUpOverlay");
+  const levelUpText = document.getElementById("levelUpText");
+  loadXP();
+  renderRank();
   const cells = [];
   const numBtns = [];
 
@@ -356,18 +549,42 @@
         else if (r === sr || c === sc || sameBox) cls += " rel";
       }
       if (v && !puzzle[i] && hasConflict(cur, i)) cls += " bad";
-      el.className = cls;
-      el.textContent = v || "";
+      if (el.className !== cls) el.className = cls;
+
+      el.innerHTML = "";
+      if (v) {
+        const span = document.createElement("span");
+        span.className = "val";
+        span.textContent = v;
+        el.appendChild(span);
+      } else if (notes[i] && notes[i].size) {
+        const g = document.createElement("div");
+        g.className = "notesGrid";
+        for (let n = 1; n <= 9; n++) {
+          const s = document.createElement("span");
+          s.textContent = notes[i].has(n) ? n : "";
+          g.appendChild(s);
+        }
+        el.appendChild(g);
+      }
       el.setAttribute("aria-label", "पंक्ति " + (r + 1) + " स्तंभ " + (c + 1) + (v ? ", नंबर " + v : ", खाली"));
     }
     for (let n = 1; n <= 9; n++) numBtns[n - 1].disabled = counts[n] >= 9;
     hintsEl.textContent = hints;
+    mistakesEl.textContent = mistakes;
+    btnNotes.className = "btn ghost" + (notesMode ? " on" : "");
+    btnUndo.disabled = history.length === 0;
   }
 
   // ---------- क्रियाएँ ----------
   function select(i) {
     selected = i;
     render();
+  }
+
+  function pushHistory(i) {
+    history.push({ i, val: cur[i], notes: notes[i] ? new Set(notes[i]) : null, mistakes });
+    if (history.length > 200) history.shift();
   }
 
   function isComplete() {
@@ -379,22 +596,59 @@
   function win() {
     finished = true;
     clearInterval(timerId);
-    message("🎉 शाबाश! आपने " + fmt(seconds) + " में पहेली हल कर ली।", "ok");
+    const xpAmount = isDaily ? 50 : (level === "hard" ? 30 : level === "medium" ? 20 : 10);
+    awardXP(xpAmount);
+    message("🎉 शाबाश! आपने " + fmt(seconds) + " में पहेली हल कर ली। (+" + xpAmount + " XP)", "ok");
+  }
+
+  function popCell(i) {
+    const el = cells[i];
+    el.classList.remove("pop");
+    void el.offsetWidth;
+    el.classList.add("pop");
   }
 
   function enter(n) {
     if (finished) return;
     if (selected < 0) { message("पहले कोई खाली खाना चुनें।", "err"); return; }
     if (puzzle[selected]) { message("यह खाना पहले से भरा है, बदल नहीं सकते।", "err"); return; }
+
+    if (notesMode) {
+      pushHistory(selected);
+      if (!notes[selected]) notes[selected] = new Set();
+      if (notes[selected].has(n)) notes[selected].delete(n);
+      else notes[selected].add(n);
+      message("");
+      render();
+      return;
+    }
+
+    pushHistory(selected);
+    if (solution[selected] !== n) mistakes++;
     cur[selected] = n;
+    notes[selected] = null;
     message("");
     render();
+    popCell(selected);
     if (isComplete()) win();
   }
 
   function erase() {
     if (finished || selected < 0 || puzzle[selected]) return;
+    pushHistory(selected);
     cur[selected] = 0;
+    notes[selected] = null;
+    message("");
+    render();
+  }
+
+  function undo() {
+    if (!history.length) return;
+    const last = history.pop();
+    cur[last.i] = last.val;
+    notes[last.i] = last.notes;
+    mistakes = last.mistakes;
+    selected = last.i;
     message("");
     render();
   }
@@ -420,31 +674,53 @@
       if (!options.length) return;
       i = options[Math.floor(Math.random() * options.length)];
     }
+    pushHistory(i);
     cur[i] = solution[i];
+    notes[i] = null;
     selected = i;
     hints++;
     message("");
     render();
+    popCell(i);
     if (isComplete()) win();
+  }
+
+  function todayKey() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function startGame(g, lv, daily) {
+    solution = g.solution;
+    puzzle = g.puzzle;
+    cur = g.puzzle.slice();
+    notes = new Array(81).fill(null);
+    selected = -1; hints = 0; mistakes = 0; seconds = 0; finished = false; notesMode = false; history = [];
+    level = lv; isDaily = !!daily;
+    timerEl.textContent = fmt(0);
+    clearInterval(timerId);
+    timerId = setInterval(() => { seconds++; timerEl.textContent = fmt(seconds); }, 1000);
+    document.querySelectorAll(".level").forEach(b =>
+      b.setAttribute("aria-pressed", (!daily && b.dataset.level === level) ? "true" : "false"));
+    message(daily ? "🗓️ आज की पहेली — रोज़ नई!" : "");
+    render();
   }
 
   function newGame(lv) {
     if (lv) level = lv;
+    rng = Math.random;
     message("पहेली बन रही है…");
-    document.querySelectorAll(".level").forEach(b =>
-      b.setAttribute("aria-pressed", b.dataset.level === level ? "true" : "false"));
-    // थोड़ा रुककर बनाते हैं ताकि "बन रही है" संदेश दिख जाए
+    setTimeout(() => { startGame(makePuzzle(level), level, false); }, 30);
+  }
+
+  function dailyGame() {
+    const key = todayKey();
+    const seed = hashStr("sudoku-daily-" + key);
+    rng = mulberry32(seed);
+    message("आज की पहेली बन रही है…");
     setTimeout(() => {
-      const g = makePuzzle(level);
-      solution = g.solution;
-      puzzle = g.puzzle;
-      cur = g.puzzle.slice();
-      selected = -1; hints = 0; seconds = 0; finished = false;
-      timerEl.textContent = fmt(0);
-      clearInterval(timerId);
-      timerId = setInterval(() => { seconds++; timerEl.textContent = fmt(seconds); }, 1000);
-      message("");
-      render();
+      startGame(makePuzzle("medium"), "medium", true);
+      rng = Math.random;
     }, 30);
   }
 
@@ -453,12 +729,17 @@
   document.getElementById("btnErase").addEventListener("click", erase);
   document.getElementById("btnHint").addEventListener("click", hint);
   document.getElementById("btnNew").addEventListener("click", () => newGame());
+  document.getElementById("btnUndo").addEventListener("click", undo);
+  document.getElementById("btnNotes").addEventListener("click", () => { notesMode = !notesMode; render(); });
+  btnDaily.addEventListener("click", dailyGame);
   document.querySelectorAll(".level").forEach(b =>
     b.addEventListener("click", () => newGame(b.dataset.level)));
 
   document.addEventListener("keydown", (e) => {
     if (e.key >= "1" && e.key <= "9") enter(Number(e.key));
     else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") erase();
+    else if (e.key.toLowerCase() === "z" && (e.ctrlKey || e.metaKey)) undo();
+    else if (e.key.toLowerCase() === "n") { notesMode = !notesMode; render(); }
     else if (selected >= 0 && e.key.startsWith("Arrow")) {
       e.preventDefault();
       let r = Math.floor(selected / 9), c = selected % 9;
